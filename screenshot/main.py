@@ -1,14 +1,19 @@
-import asyncio
-import pyscreenshot as ImageGrab
+import os
 from datetime import datetime
-import schedule
+from core.config import BASE_DIR
+from PIL import ImageGrab
 
 
-async def take_screenshot():
-    image_name = f'store/screenshot-{str(datetime.now())}'
-    scr = ImageGrab.grab()
-    filepath = f'{image_name}.png'
 
-    await scr.save(filepath)
+def capture_screenshot():
+    output_folder = f'{BASE_DIR}/store'
+    os.makedirs(output_folder, exist_ok=True)
 
-    return filepath
+    screenshot = ImageGrab.grab()
+
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    filename = f"screenshot_{timestamp}.png"
+    filepath = os.path.join(output_folder, filename)
+    screenshot.save(filepath)
+    print(f"Screenshot saved to {filepath}")

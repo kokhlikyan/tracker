@@ -2,6 +2,9 @@ import os
 import sys
 from PySide6.QtWidgets import QApplication
 from ui.tracker import ExpenseTracker
+from core.config import BASE_DIR
+
+print(BASE_DIR)
 
 
 def main():
@@ -18,5 +21,4 @@ if __name__ == '__main__':
     os.environ["LD_LIBRARY_PATH"] = app_path  # for Linux
     app = QApplication(sys.argv)
     w = main()
-
     sys.exit(app.exec())
