@@ -1,4 +1,5 @@
 import multiprocessing
+import random
 from PySide6.QtWidgets import QMainWindow
 from ui.main_ui import Ui_MainWindow
 from PySide6.QtCore import QTimer, QTime
@@ -8,9 +9,11 @@ from screenshot.main import capture_screenshot
 
 class ExpenseTracker(QMainWindow):
     def __init__(self):
+        super(ExpenseTracker, self).__init__()
+        self.screenshot_process = None
+        self.screenshot_time = random.randint(180, 600)
         self.status = False
         self.elapsed_time = QTime(0, 0)
-        super(ExpenseTracker, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.control_btn.setIcon(QIcon(u":/resources/icons/play.svg"))
@@ -27,7 +30,8 @@ class ExpenseTracker(QMainWindow):
             self.status = True
             self.ui.control_btn.setIcon(QIcon(u":/resources/icons/stop.svg"))
             self.timer.start(1000)
-            self.screenshot_timer.start(5000)
+            print(self.screenshot_time * 1000)
+            self.screenshot_timer.start(self.screenshot_time * 1000)
         else:
             self.status = False
             self.ui.control_btn.setIcon(QIcon(u":/resources/icons/play.svg"))
@@ -40,5 +44,6 @@ class ExpenseTracker(QMainWindow):
         self.ui.timer_window.setText(formatted_time)
 
     def start_tracking(self):
+        self.screenshot_time = random.randint(180, 600)
         self.screenshot_process = multiprocessing.Process(target=capture_screenshot)
         self.screenshot_process.start()
