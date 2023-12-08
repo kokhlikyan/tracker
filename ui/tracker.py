@@ -1,5 +1,6 @@
-import multiprocessing
 import random
+import logging
+import threading
 from PySide6.QtWidgets import QMainWindow
 from ui.main_ui import Ui_MainWindow
 from PySide6.QtCore import QTimer, QTime
@@ -23,27 +24,28 @@ class ExpenseTracker(QMainWindow):
         self.timer.timeout.connect(self.update_time)
 
         self.screenshot_timer = QTimer(self)
-        self.screenshot_timer.timeout.connect(self.start_tracking)
+        self.screenshot_timer.timeout.connect(self.capture_screenshot_threaded)
 
     def play(self):
         if self.status is False:
             self.status = True
             self.ui.control_btn.setIcon(QIcon(u":/resources/icons/stop.svg"))
             self.timer.start(1000)
-            print(self.screenshot_time * 1000)
-            self.screenshot_timer.start(self.screenshot_time * 1000)
+            self.screenshot_timer.start(5000)
+            logging.info('Track is started...')
         else:
             self.status = False
             self.ui.control_btn.setIcon(QIcon(u":/resources/icons/play.svg"))
             self.timer.stop()
             self.screenshot_timer.stop()
+            logging.info('Track is stopped...')
 
     def update_time(self):
         self.elapsed_time = self.elapsed_time.addSecs(1)
         formatted_time = self.elapsed_time.toString("hh:mm:ss")
         self.ui.timer_window.setText(formatted_time)
 
-    def start_tracking(self):
-        self.screenshot_time = random.randint(180, 600)
-        self.screenshot_process = multiprocessing.Process(target=capture_screenshot)
-        self.screenshot_process.start()
+    def capture_screenshot_threaded(self):
+        # Run capture_screenshot in a separate thread
+        screenshot_thread = threading.Thread(target=capture_screenshot)
+        screenshot_thread.start()
