@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QApplication
 from ui.tracker import ExpenseTracker
 from PySide6.QtCore import QDir
 from core.config import APP_LOCAL_FOLDER
+from storage.connection import Storage
 
 
 def main():
@@ -27,6 +28,7 @@ if __name__ == '__main__':
         os.environ["PATH"] += os.pathsep + app_path  # for Windows
         os.environ["DYLD_FALLBACK_LIBRARY_PATH"] = app_path  # for macOS
         os.environ["LD_LIBRARY_PATH"] = app_path  # for Linux
+
         app = QApplication(sys.argv)
         w = main()
         sys.exit(app.exec())

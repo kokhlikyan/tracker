@@ -1,6 +1,5 @@
 import os
 import logging
-import asyncio
 from datetime import datetime
 from core.config import APP_LOCAL_FOLDER
 from PIL import ImageGrab
