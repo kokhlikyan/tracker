@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.0
+## Created by: Qt User Interface Compiler version 6.6.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -104,6 +104,30 @@ class Ui_MainWindow(object):
 "border-radius: 10px;")
         self.content.setFrameShape(QFrame.StyledPanel)
         self.content.setFrameShadow(QFrame.Raised)
+        self.verticalLayout = QVBoxLayout(self.content)
+        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 10, 0, 10)
+        self.last_screenshot_title = QLabel(self.content)
+        self.last_screenshot_title.setObjectName(u"last_screenshot_title")
+        self.last_screenshot_title.setMinimumSize(QSize(400, 50))
+        self.last_screenshot_title.setMaximumSize(QSize(400, 50))
+        self.last_screenshot_title.setStyleSheet(u"color: rgb(0, 56, 255);\n"
+"font-size: 18px;\n"
+"font-weight: bold;\n"
+"padding:0 10px;\n"
+"background-color:#fff;")
+
+        self.verticalLayout.addWidget(self.last_screenshot_title, 0, Qt.AlignHCenter)
+
+        self.last_screenshot = QLabel(self.content)
+        self.last_screenshot.setObjectName(u"last_screenshot")
+        self.last_screenshot.setMinimumSize(QSize(400, 300))
+        self.last_screenshot.setMaximumSize(QSize(400, 300))
+        self.last_screenshot.setStyleSheet(u"background-color:#fff;")
+
+        self.verticalLayout.addWidget(self.last_screenshot, 0, Qt.AlignHCenter|Qt.AlignVCenter)
+
 
         self.main_layout.addWidget(self.content)
 
@@ -122,5 +146,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.timer_window.setText(QCoreApplication.translate("MainWindow", u"00:00:00", None))
         self.control_btn.setText("")
+        self.last_screenshot_title.setText(QCoreApplication.translate("MainWindow", u"Last screenshot: ", None))
+        self.last_screenshot.setText("")
     # retranslateUi
 

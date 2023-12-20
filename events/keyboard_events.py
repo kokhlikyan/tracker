@@ -1,24 +1,17 @@
+import threading
 from pynput import keyboard
 
 
-def on_press(key):
-    try:
-        print('alphanumeric key {0} pressed'.format(
-            key.char))
-    except AttributeError:
-        print('special key {0} pressed'.format(
-            key))
+class KeyboardListenerThread(threading.Thread):
+    def __init__(self):
+        super(KeyboardListenerThread, self).__init__()
 
+    def on_press(self, key):
+        try:
+            print(f'Key pressed: {key.char}')
+        except AttributeError:
+            print(f'Special key pressed: {key}')
 
-def on_release(key):
-    print('{0} released'.format(
-        key))
-    if key == keyboard.Key.esc:
-        # Stop listener
-        return False
-    
-
-with keyboard.Listener(
-        on_press=on_press,
-        on_release=on_release) as listener:
-    listener.join()
+    def run(self):
+        with keyboard.Listener(on_press=self.on_press) as listener:
+            listener.start()
