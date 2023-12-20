@@ -78,6 +78,7 @@ def add_or_update_mouse_event(query: QSqlQuery, session_id: int, left: int, righ
         query.addBindValue(session_id)
         query.addBindValue(left)
         query.addBindValue(right)
+        query.exec()
 
 
 def set_last_screenshot_path(query: QSqlQuery, session_id, path):

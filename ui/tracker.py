@@ -50,6 +50,7 @@ class ExpenseTracker(QMainWindow):
     def play(self):
         if self.status is False:
             self.screenshot_time = random.randint(180, 600)
+            self.screenshot_time = 10
             self.status = True
             self.ui.control_btn.setIcon(QIcon(u":/resources/icons/stop.svg"))
             self.timer.start(1000)
@@ -73,7 +74,8 @@ class ExpenseTracker(QMainWindow):
         self.ui.timer_window.setText(formatted_time)
 
     def capture_screenshot_threaded(self):
-        self.screenshot_time = random.randint(180, 600)
+        # self.screenshot_time = random.randint(180, 600)
+        self.screenshot_time = 10
         logging.info(f'Screenshot time: {self.screenshot_time}')
         query = self.db.get_query()
         session = get_current_session(query)
