@@ -62,23 +62,26 @@ def add_click_event(query: QSqlQuery, session_id: int):
 
 
 def add_or_update_mouse_event(query: QSqlQuery, session_id: int, left: int, right: int):
-    select_query = "SELECT * FROM `mouse_events` WHERE `session_id` = :session_id"
-    query.prepare(select_query)
-    query.bindValue(':session_id', session_id)
-    if query.exec() and query.next():
-        select_query = ("UPDATE `mouse_events` SET `left` = `left` + :left, `right` = `right` + :right WHERE  "
-                        "`session_id` = :session_id")
+    try:
+        select_query = "SELECT * FROM `mouse_events` WHERE `session_id` = :session_id"
         query.prepare(select_query)
         query.bindValue(':session_id', session_id)
-        query.bindValue(':left', left)
-        query.bindValue(':right', right)
-        query.exec()
-    else:
-        query.prepare("INSERT INTO `mouse_events` (`session_id`,`left`, `right`) VALUES (?,?,?)")
-        query.addBindValue(session_id)
-        query.addBindValue(left)
-        query.addBindValue(right)
-        query.exec()
+        if query.exec() and query.next():
+            select_query = ("UPDATE `mouse_events` SET `left` = `left` + :left, `right` = `right` + :right WHERE  "
+                            "`session_id` = :session_id")
+            query.prepare(select_query)
+            query.bindValue(':session_id', session_id)
+            query.bindValue(':left', left)
+            query.bindValue(':right', right)
+            query.exec()
+        else:
+            query.prepare("INSERT INTO `mouse_events` (`session_id`,`left`, `right`) VALUES (?,?,?)")
+            query.addBindValue(session_id)
+            query.addBindValue(left)
+            query.addBindValue(right)
+            query.exec()
+    except Exception as e:
+        logging.error(str(e))
 
 
 def set_last_screenshot_path(query: QSqlQuery, session_id, path):
@@ -86,4 +89,3 @@ def set_last_screenshot_path(query: QSqlQuery, session_id, path):
     query.bindValue(':session_id', session_id)
     query.bindValue(':path', path)
     query.exec()
-

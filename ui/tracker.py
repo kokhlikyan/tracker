@@ -22,7 +22,7 @@ class ExpenseTracker(QMainWindow):
         super(ExpenseTracker, self).__init__()
         self.session = None
         self.screenshot_process = None
-        self.screenshot_time = 0
+        self.screenshot_time = 10
         self.status = False
 
         # Connection to db
@@ -48,9 +48,10 @@ class ExpenseTracker(QMainWindow):
         # Set the pixmap to the QLabel
         self.ui.last_screenshot.setPixmap(pixmap)
         self.ui.last_screenshot.setScaledContents(True)
+
     def play(self):
         if self.status is False:
-            self.screenshot_time = random.randint(180, 600)
+            # self.screenshot_time = random.randint(180, 600)
             self.status = True
             self.ui.control_btn.setIcon(QIcon(u":/resources/icons/stop.svg"))
             self.timer.start(1000)
@@ -74,15 +75,18 @@ class ExpenseTracker(QMainWindow):
         self.ui.timer_window.setText(formatted_time)
 
     def capture_screenshot_threaded(self):
-        self.screenshot_time = random.randint(180, 600)
+        # self.screenshot_time = random.randint(180, 600)
         logging.info(f'Screenshot time: {self.screenshot_time}')
         query = self.db.get_query()
         session = get_current_session(query)
         screenshot_thread = threading.Thread(target=capture_screenshot, args=(query, session.get('id'),))
         screenshot_thread.start()
+        threading.Thread(target=self.update_screenshot_data, args=(query,)).start()
+
+    def update_screenshot_data(self, query):
+        time.sleep(1)
         session = get_current_session(query)
         current_datetime = datetime.now()
         formatted_datetime = current_datetime.strftime("%d.%m.%Y %H:%M:%S")
-        time.sleep(2)
         self.ui.last_screenshot_title.setText(f'Last screenshot: {formatted_datetime}')
         self.load_image_from_url(session.get('last_screenshot_path'))

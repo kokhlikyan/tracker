@@ -1,3 +1,4 @@
+import logging
 import threading
 from pynput import mouse
 from storage.events import add_or_update_mouse_event
@@ -26,9 +27,11 @@ class MouseListener(threading.Thread):
             self.listener = mouse.Listener(on_click=self.on_click)
             self.listener.start()
             self.running = True
+            logging.info('mouse event listener is started')
 
     def stop_listener(self):
         if self.running:
             self.listener.stop()
             self.listener.join()
             self.running = False
+            logging.info('mouse event listener is stoped')
