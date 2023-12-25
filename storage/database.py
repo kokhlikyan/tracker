@@ -24,6 +24,7 @@ class Database:
         self.create_timer_table()
         self.create_mouse_events_table()
         self.create_keyboard_events_table()
+
     def get_query(self):
         return self.query
     def create_session_table(self):
@@ -44,9 +45,9 @@ class Database:
             self.query.exec(
                 """ CREATE TABLE IF NOT EXISTS `tracks` (
                     `id` INTEGER PRIMARY KEY AUTOINCREMENT, 
-                    `time` UNSIGNED BIG INT NOT NULL, 
+                    `time` VARCHAR NOT NULL, 
                     `session_id` INTEGER NOT NULL,
-                    FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`))
+                    FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`)) 
                 """)
         except Exception as e:
             logging.error(str(e))
@@ -79,8 +80,6 @@ class Database:
         except Exception as e:
             logging.error(str(e))
 
-    def add_mouse_event(self, data):
-        pass
-        # self.query.prepare("INSERT INTO `mouse_events` (`data`) VALUES (?)")
-        # self.query.addBindValue(json.dumps(data))
-        # self.query.exec()
+    def close(self):
+        self.db.close()
+

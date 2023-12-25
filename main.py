@@ -30,9 +30,7 @@ if __name__ == '__main__':
         os.environ["LD_LIBRARY_PATH"] = app_path  # for Linux
 
         w = main()
-        sys.exit(app.exec())
     except Exception as e:
         logging.error(f'Error: {e}')
-
     finally:
         sys.exit(app.exec())

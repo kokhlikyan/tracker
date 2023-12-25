@@ -84,6 +84,27 @@ def add_or_update_mouse_event(query: QSqlQuery, session_id: int, left: int, righ
         logging.error(str(e))
 
 
+def save_tracked_time(query: QSqlQuery, session_id: int, time):
+    try:
+        select_query = "SELECT * FROM `tracks` WHERE `session_id` = :session_id"
+        query.prepare(select_query)
+        query.bindValue(':session_id', session_id)
+        if query.exec() and query.next():
+            select_query = ("UPDATE `tracks` SET `time` =  :time WHERE  "
+                            "`session_id` = :session_id")
+            query.prepare(select_query)
+            query.bindValue(':session_id', session_id)
+            query.bindValue(':time', time)
+            query.exec()
+        else:
+            query.prepare("INSERT INTO `tracks` (`session_id`,`time`) VALUES (?,?)")
+            query.addBindValue(session_id)
+            query.addBindValue(time)
+            query.exec()
+    except Exception as e:
+        logging.error(str(e))
+
+
 def set_last_screenshot_path(query: QSqlQuery, session_id, path):
     query.prepare("UPDATE `sessions` SET `last_screenshot_path` = :path WHERE `id` = :session_id")
     query.bindValue(':session_id', session_id)
