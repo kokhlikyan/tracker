@@ -108,7 +108,7 @@ class ExpenseTracker(QMainWindow):
         self.dialog.screenshot.setPixmap(pixmap)
         self.dialog.screenshot.setScaledContents(True)
         self.dialog.title.setText(formatted_datetime)
-        self.dialog.show()
+        self.dialog.exec()
 
     def close_dialog(self):
         self.dialog.close()
