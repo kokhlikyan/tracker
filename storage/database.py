@@ -33,6 +33,7 @@ class Database:
                 """ CREATE TABLE IF NOT EXISTS `sessions` (
                     `id` INTEGER PRIMARY KEY AUTOINCREMENT, 
                     `datetime` DATETIME NOT NULL,
+                    `project` VARCHAR,
                     `last_screenshot_path` VARCHAR DEFAULT NULL,
                     `is_closed` INTEGER DEFAULT 0 
                     )

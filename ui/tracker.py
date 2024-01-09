@@ -1,101 +1,166 @@
-import random
 import logging
+import sys
 import threading
+import random
 import time
 
 from datetime import datetime
 
-from PySide6.QtWidgets import QMainWindow
-from PySide6.QtGui import QPixmap
-from PySide6.QtCore import QTimer, QTime
+from PySide6.QtWidgets import QMainWindow, QRadioButton, QMessageBox
+from PySide6.QtGui import QPixmap, QCursor
+from PySide6.QtCore import QTimer, QTime, QSize, Qt
 from PySide6.QtGui import QIcon
 
 from ui.main_ui import Ui_MainWindow
+from ui.dialog import ScreenshotDialog, message
 from screenshot.main import capture_screenshot
 from storage.database import Database
 from storage.events import session_start, get_current_session, update_session, save_tracked_time
 from events.mouse_events import MouseListener
+from events.timer import Timer
 
 
 class ExpenseTracker(QMainWindow):
     def __init__(self):
         super(ExpenseTracker, self).__init__()
+        self.radio_buttons = []
         self.session = None
         self.screenshot_process = None
-        self.screenshot_time = 15
+        self.screenshot_time = 30
+        self.dialog = ScreenshotDialog()
         self.status = False
+
+        self.counted_time = 0
+        self.project = None
 
         # Connection to db
         self.db = Database()
-        self.elapsed_time = QTime(0, 0)
-        self.formatted_time = '00:00:00'
+
+        # UI
+
         self.ui = Ui_MainWindow()
+        self.timer_thread = Timer(self.ui)
         self.ui.setupUi(self)
         self.ui.control_btn.setIcon(QIcon(u":/resources/icons/play.svg"))
         self.ui.control_btn.clicked.connect(self.play)
-
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_time)
+        self.render_projects()
 
         self.screenshot_timer = QTimer(self)
         self.screenshot_timer.timeout.connect(self.capture_screenshot_threaded)
+        self.close_dialog_timer = QTimer(self)
+        self.close_dialog_timer.timeout.connect(self.close_dialog)
+        self.thread_mouse_event = None
 
-        self.thread_mouse_event = MouseListener(self.db.get_query(), get_current_session(self.db.get_query()).get('id'))
+    def __del__(self):
+        self.update_track_time()
+        self.close_session()
+        self.db.close()
+
+    def close_session(self):
+        session = get_current_session(self.db.get_query(), self.project)
+        update_session(self.db.get_query(), session.get('id'))
 
     def play(self):
-        if self.status is False:
-            # self.screenshot_time = random.randint(180, 600)
-            self.status = True
-            self.ui.control_btn.setIcon(QIcon(u":/resources/icons/stop.svg"))
-            self.timer.start(1000)
-            self.screenshot_timer.start(self.screenshot_time * 1000)
-            session_start(self.db.get_query())
-            self.thread_mouse_event.run()
-            logging.info('Track is started...')
-            logging.info(f'The next screenshot will be in: {round(self.screenshot_time / 60, 1)}m')
-        else:
-            self.status = False
-            self.ui.control_btn.setIcon(QIcon(u":/resources/icons/play.svg"))
-            self.timer.stop()
-            self.screenshot_timer.stop()
-            self.thread_mouse_event.stop_listener()
-            self.update_track_time()
-            logging.info('Track is stopped...')
+        if self.project is not None:
+            if self.status is False:
+                self.ui.control_btn.setIcon(QIcon(u":/resources/icons/stop.svg"))
+                self.status = True
+                self.runner()
 
-    def update_time(self):
-        self.elapsed_time = self.elapsed_time.addSecs(1)
-        self.formatted_time = self.elapsed_time.toString("hh:mm:ss")
-        self.ui.timer_window.setText(self.formatted_time)
+            else:
+                self.ui.control_btn.setIcon(QIcon(u":/resources/icons/play.svg"))
+                self.status = False
+                self.cleaner()
+        else:
+            message('you should select a project')
+
+        self.radio_button_switcher()
+
+    def runner(self):
+        session_start(self.db.get_query(), self.project)
+        # self.screenshot_time = random.randint(180, 600)
+        self.screenshot_timer.start(self.screenshot_time * 1000)
+        self.close_dialog_timer.start((self.screenshot_time + 5) * 1000)
+        self.timer_thread.run()
+        self.thread_mouse_event = MouseListener(self.db.get_query(), get_current_session(
+            self.db.get_query(), self.project).get('id'))
+        self.thread_mouse_event.run()
+        logging.info('Track is started...')
+
+    def cleaner(self):
+        self.screenshot_timer.stop()
+        self.thread_mouse_event.stop_listener()
+        self.update_track_time()
+        logging.info('Track is stopped...')
+        self.timer_thread.stop()
 
     def capture_screenshot_threaded(self):
         # self.screenshot_time = random.randint(180, 600)
         logging.info(f'Screenshot time: {self.screenshot_time}')
         query = self.db.get_query()
         screenshot_thread = threading.Thread(target=capture_screenshot,
-                                             args=(query, get_current_session(query).get('id'),))
+                                             args=(query, get_current_session(query, self.project).get('id'),))
         screenshot_thread.start()
-        threading.Thread(target=self.update_screenshot_data, args=(query,)).start()
+        self.update_screenshot_data(query)
 
-    def load_image_from_url(self, url):
+    def load_image_from_url(self, url, formatted_datetime):
         pixmap = QPixmap(url)
-        self.ui.last_screenshot.setPixmap(pixmap)
-        self.ui.last_screenshot.setScaledContents(True)
+        self.dialog.screenshot.setPixmap(pixmap)
+        self.dialog.screenshot.setScaledContents(True)
+        self.dialog.title.setText(formatted_datetime)
+        self.dialog.show()
+
+    def close_dialog(self):
+        self.dialog.close()
 
     def update_screenshot_data(self, query):
-        time.sleep(5)
-        session = get_current_session(query)
-        current_datetime = datetime.now()
-        self.load_image_from_url(session.get('last_screenshot_path'))
-        formatted_datetime = current_datetime.strftime("%d.%m.%Y %H:%M:%S")
-        self.ui.last_screenshot_title.setText(f'Last screenshot: {formatted_datetime}')
+        session = get_current_session(query, self.project)
+        image_path = session.get('last_screenshot_path')
+        if image_path:
+            current_datetime = datetime.now()
+            formatted_datetime = current_datetime.strftime("%d.%m.%Y %H:%M:%S")
+            self.load_image_from_url(image_path, formatted_datetime)
+
+    def render_projects(self):
+        for i in range(10):
+            project = QRadioButton(self.ui.projects)
+            project.setText(f"Project {i + 1}")
+            project.setStyleSheet(u"QRadioButton{\n"
+                                  "	padding: 10px;\n"
+                                  "	background-color: rgb(204, 206, 219);\n"
+                                  "	font-size: 16px;\n"
+                                  "	color: #000;\n"
+                                  "}\n"
+                                  "")
+
+            project.setObjectName(u"project")
+            project.setMinimumSize(QSize(0, 40))
+            project.setMaximumSize(QSize(16777215, 40))
+            project.setCursor(QCursor(Qt.PointingHandCursor))
+            project.clicked.connect(self.radio_button_clicked)
+            self.ui.verticalLayout_2.addWidget(project)
+            self.radio_buttons.append(project)
+
+    def radio_button_clicked(self):
+        sender = self.sender()
+        if sender.isChecked():
+            self.project = sender.text()
+            query = self.db.get_query()
+            session = get_current_session(query, sender.text())
+
+            if session.get('project') != self.project:
+                self.timer_thread = Timer(self.ui)
+                self.timer_thread.update_time()
+
+    def radio_button_switcher(self):
+        for btn in self.radio_buttons:
+            if self.status:
+                if btn.text() != self.project:
+                    btn.setDisabled(True)
+            else:
+                btn.setDisabled(False)
 
     def update_track_time(self):
         query = self.db.get_query()
-        session = get_current_session(query)
-        save_tracked_time(query, session.get('id'), self.formatted_time)
-
-    def __del__(self):
-        session = get_current_session(self.db.get_query())
-        self.update_track_time()
-        update_session(self.db.get_query(), session.get('id'))
-        self.db.close()
+        session = get_current_session(query, self.project)
+        save_tracked_time(query, session.get('id'), self.timer_thread.formatted_time)

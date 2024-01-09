@@ -3,11 +3,12 @@ from datetime import datetime, timedelta, time
 from PySide6.QtSql import QSqlQuery
 
 
-def add_new_session(query: QSqlQuery):
+def add_new_session(query: QSqlQuery, project):
     local_datetime = datetime.now()
     date = local_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    query.prepare("INSERT INTO `sessions` (`datetime`) VALUES (?)")
+    query.prepare("INSERT INTO `sessions` (`datetime`, `project`) VALUES (?, ?)")
     query.addBindValue(date)
+    query.addBindValue(project)
     query.exec()
 
 
@@ -17,8 +18,9 @@ def update_session(query: QSqlQuery, id):
     query.exec()
 
 
-def get_current_session(query: QSqlQuery):
-    select_query = "SELECT * FROM `sessions` WHERE `is_closed` = 0"
+def get_current_session(query: QSqlQuery, project):
+    select_query = f"SELECT * FROM `sessions` WHERE `is_closed` = 0 AND `project` LIKE '%{project}%'"
+    query.prepare(select_query)
     data = {}
     if query.exec(select_query) and query.next():
         column_count = query.record().count()
@@ -29,10 +31,10 @@ def get_current_session(query: QSqlQuery):
     return data
 
 
-def session_start(query: QSqlQuery):
-    data = get_current_session(query)
+def session_start(query: QSqlQuery, project):
+    data = get_current_session(query, project)
     if not data:
-        add_new_session(query)
+        add_new_session(query, project)
     else:
         given_datetime_str = data['datetime']
         given_datetime = datetime.strptime(given_datetime_str, "%Y-%m-%d %H:%M:%S")
@@ -41,7 +43,7 @@ def session_start(query: QSqlQuery):
         fixed_datetime = datetime.combine(current_date, fixed_time)
         time_difference = given_datetime - fixed_datetime
         if time_difference > timedelta(hours=24):
-            add_new_session(query)
+            add_new_session(query, project)
             update_session(query, data['id'])
 
 

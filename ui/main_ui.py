@@ -16,8 +16,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QLabel,
-    QLayout, QMainWindow, QPushButton, QSizePolicy,
-    QVBoxLayout, QWidget)
+    QLayout, QMainWindow, QPushButton, QRadioButton,
+    QScrollArea, QSizePolicy, QVBoxLayout, QWidget)
 import ui.resources
 
 class Ui_MainWindow(object):
@@ -25,9 +25,18 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(500, 619)
-        MainWindow.setStyleSheet(u"background-color: rgb(255, 255, 255);")
+        MainWindow.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
+"\n"
+"QRadioButton{\n"
+"	padding: 10px;\n"
+"	background-color: rgb(204, 206, 219);\n"
+"	font-size: 16px;\n"
+"	color: #000;\n"
+"}\n"
+"")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
+        self.centralwidget.setStyleSheet(u"")
         self.verticalLayout_4 = QVBoxLayout(self.centralwidget)
 #ifndef Q_OS_MAC
         self.verticalLayout_4.setSpacing(-1)
@@ -105,28 +114,33 @@ class Ui_MainWindow(object):
         self.content.setFrameShape(QFrame.StyledPanel)
         self.content.setFrameShadow(QFrame.Raised)
         self.verticalLayout = QVBoxLayout(self.content)
-        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setSpacing(12)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 10, 0, 10)
-        self.last_screenshot_title = QLabel(self.content)
-        self.last_screenshot_title.setObjectName(u"last_screenshot_title")
-        self.last_screenshot_title.setMinimumSize(QSize(400, 50))
-        self.last_screenshot_title.setMaximumSize(QSize(400, 50))
-        self.last_screenshot_title.setStyleSheet(u"color: rgb(0, 56, 255);\n"
+        self.verticalLayout.setContentsMargins(10, 10, 10, 10)
+        self.projects_title = QLabel(self.content)
+        self.projects_title.setObjectName(u"projects_title")
+        self.projects_title.setStyleSheet(u"padding: 10px;\n"
 "font-size: 18px;\n"
 "font-weight: bold;\n"
-"padding:0 10px;\n"
-"background-color:#fff;")
+"color: #000;")
 
-        self.verticalLayout.addWidget(self.last_screenshot_title, 0, Qt.AlignHCenter)
+        self.verticalLayout.addWidget(self.projects_title)
 
-        self.last_screenshot = QLabel(self.content)
-        self.last_screenshot.setObjectName(u"last_screenshot")
-        self.last_screenshot.setMinimumSize(QSize(400, 300))
-        self.last_screenshot.setMaximumSize(QSize(400, 300))
-        self.last_screenshot.setStyleSheet(u"background-color:#fff;")
+        self.scrollArea = QScrollArea(self.content)
+        self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setMinimumSize(QSize(0, 300))
+        self.scrollArea.setStyleSheet(u"background: transparent;")
+        self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
+        self.projects = QWidget()
+        self.projects.setObjectName(u"projects")
+        self.projects.setGeometry(QRect(0, 0, 443, 330))
+        self.verticalLayout_2 = QVBoxLayout(self.projects)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.scrollArea.setWidget(self.projects)
 
-        self.verticalLayout.addWidget(self.last_screenshot, 0, Qt.AlignHCenter|Qt.AlignVCenter)
+        self.verticalLayout.addWidget(self.scrollArea)
 
 
         self.main_layout.addWidget(self.content)
@@ -146,7 +160,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.timer_window.setText(QCoreApplication.translate("MainWindow", u"00:00:00", None))
         self.control_btn.setText("")
-        self.last_screenshot_title.setText(QCoreApplication.translate("MainWindow", u"Last screenshot: ", None))
-        self.last_screenshot.setText("")
+        self.projects_title.setText(QCoreApplication.translate("MainWindow", u"Projects", None))
     # retranslateUi
 
