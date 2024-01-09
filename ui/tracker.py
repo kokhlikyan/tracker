@@ -26,7 +26,7 @@ class ExpenseTracker(QMainWindow):
         self.radio_buttons = []
         self.session = None
         self.screenshot_process = None
-        self.screenshot_time = 30
+        self.screenshot_time = 15
         self.dialog = ScreenshotDialog()
         self.status = False
 
@@ -108,7 +108,8 @@ class ExpenseTracker(QMainWindow):
         self.dialog.screenshot.setPixmap(pixmap)
         self.dialog.screenshot.setScaledContents(True)
         self.dialog.title.setText(formatted_datetime)
-        self.dialog.exec()
+        self.dialog.show()
+        print("Dialog is visible:", self.dialog.isVisible())
 
     def close_dialog(self):
         self.dialog.close()
