@@ -11,3 +11,5 @@ PySide6-Essentials==6.6.1
 setuptools==69.0.2
 shiboken6==6.6.1
 six==1.16.0
+
+keyboard~=0.13.5

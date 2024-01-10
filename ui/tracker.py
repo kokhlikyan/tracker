@@ -1,8 +1,6 @@
 import logging
-import sys
 import threading
-import random
-import time
+
 
 from datetime import datetime
 
@@ -17,8 +15,9 @@ from screenshot.main import capture_screenshot
 from storage.database import Database
 from storage.events import session_start, get_current_session, update_session, save_tracked_time
 from events.mouse_events import MouseListener
+from events.keyboard_events import KeyboardMonitorThread
 from events.timer import Timer
-
+from helpers.time import get_random_seconds
 
 class ExpenseTracker(QMainWindow):
     def __init__(self):
@@ -26,7 +25,7 @@ class ExpenseTracker(QMainWindow):
         self.radio_buttons = []
         self.session = None
         self.screenshot_process = None
-        self.screenshot_time = 15
+        self.screenshot_time = get_random_seconds()
         self.dialog = ScreenshotDialog()
         self.status = False
 
@@ -50,6 +49,7 @@ class ExpenseTracker(QMainWindow):
         self.close_dialog_timer = QTimer(self)
         self.close_dialog_timer.timeout.connect(self.close_dialog)
         self.thread_mouse_event = None
+        self.keyboard_monitor_thread = KeyboardMonitorThread()
 
     def __del__(self):
         self.update_track_time()
@@ -78,15 +78,15 @@ class ExpenseTracker(QMainWindow):
 
     def runner(self):
         session_start(self.db.get_query(), self.project)
-        # self.screenshot_time = random.randint(180, 600)
         self.screenshot_timer.start(self.screenshot_time * 1000)
-        self.close_dialog_timer.start((self.screenshot_time + 5) * 1000)
+        self.close_dialog_timer.start((self.screenshot_time + 3) * 1000)
         self.timer_thread.run()
         self.thread_mouse_event = MouseListener(self.db.get_query(), get_current_session(
             self.db.get_query(), self.project).get('id'))
         self.thread_mouse_event.run()
+        # self.keyboard_monitor_thread.start()
         logging.info('Track is started...')
-
+        logging.info(f'First screenshot time: {self.screenshot_time / 60}M')
     def cleaner(self):
         self.screenshot_timer.stop()
         self.thread_mouse_event.stop_listener()
@@ -95,8 +95,8 @@ class ExpenseTracker(QMainWindow):
         self.timer_thread.stop()
 
     def capture_screenshot_threaded(self):
-        # self.screenshot_time = random.randint(180, 600)
-        logging.info(f'Screenshot time: {self.screenshot_time}')
+        self.screenshot_time = get_random_seconds()
+        logging.info(f'Screenshot time: {self.screenshot_time / 60}M')
         query = self.db.get_query()
         screenshot_thread = threading.Thread(target=capture_screenshot,
                                              args=(query, get_current_session(query, self.project).get('id'),))
@@ -108,7 +108,7 @@ class ExpenseTracker(QMainWindow):
         self.dialog.screenshot.setPixmap(pixmap)
         self.dialog.screenshot.setScaledContents(True)
         self.dialog.title.setText(formatted_datetime)
-        self.dialog.open()
+        self.dialog.show()
 
 
     def close_dialog(self):
@@ -165,3 +165,4 @@ class ExpenseTracker(QMainWindow):
         query = self.db.get_query()
         session = get_current_session(query, self.project)
         save_tracked_time(query, session.get('id'), self.timer_thread.formatted_time)
+

@@ -1,17 +1,14 @@
-import threading
-from pynput import keyboard
+import keyboard
+from PySide6.QtCore import Signal, QThread
 
 
-class KeyboardListenerThread(threading.Thread):
-    def __init__(self):
-        super(KeyboardListenerThread, self).__init__()
-
-    def on_press(self, key):
-        try:
-            print(f'Key pressed: {key.char}')
-        except AttributeError:
-            print(f'Special key pressed: {key}')
+class KeyboardMonitorThread(QThread):
+    key_pressed = Signal(str)
 
     def run(self):
-        with keyboard.Listener(on_press=self.on_press) as listener:
-            listener.start()
+        keyboard.hook(self.keyboard_event_handler)
+
+    def keyboard_event_handler(self, event):
+        if event.event_type == keyboard.KEY_DOWN:
+            key = event.name
+            self.key_pressed.emit(key)
